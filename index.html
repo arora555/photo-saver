@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Offline Image Saver - Fixed</title>
+  <style>
+    body { font-family: Arial; text-align: center; padding: 20px; }
+    img { width: 120px; margin: 10px; border-radius: 10px; }
+    #gallery { display: flex; flex-wrap: wrap; justify-content: center; }
+    .imgBox { position: relative; }
+    button { margin: 10px; padding: 10px; }
+    .deleteBtn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: red;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>📸 Offline Photo Saver (Fixed)</h2>
+
+<input type="file" id="fileInput" accept="image/*">
+<br>
+
+<img id="preview" style="display:none; width:200px; margin-top:10px;">
+<br>
+
+<button onclick="saveImage()">Save Image</button>
+
+<h3>Gallery</h3>
+<div id="gallery"></div>
+
+<script>
+let selectedImage = "";
+
+// Load saved images on start
+window.onload = function() {
+    loadImages();
+};
+
+// Preview image
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function() {
+        selectedImage = reader.result;
+        const preview = document.getElementById('preview');
+        preview.src = selectedImage;
+        preview.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+});
+
+// Save image
+function saveImage() {
+    if (!selectedImage) {
+        alert("Select an image first");
+        return;
+    }
+
+    try {
+        let images = JSON.parse(localStorage.getItem("images")) || [];
+        images.push(selectedImage);
+        localStorage.setItem("images", JSON.stringify(images));
+
+        alert("Image saved!");
+
+        selectedImage = "";
+        document.getElementById('preview').style.display = "none";
+
+        loadImages();
+    } catch (e) {
+        alert("Storage failed. Try opening in Chrome browser.");
+    }
+}
+
+// Load gallery
+function loadImages() {
+    const gallery = document.getElementById('gallery');
+    gallery.innerHTML = "";
+
+    let images = JSON.parse(localStorage.getItem("images")) || [];
+
+    images.forEach((img, index) => {
+        const div = document.createElement('div');
+        div.className = "imgBox";
+
+        const image = document.createElement('img');
+        image.src = img;
+
+        const btn = document.createElement('button');
+        btn.innerText = "X";
+        btn.className = "deleteBtn";
+        btn.onclick = function() {
+            deleteImage(index);
+        };
+
+        div.appendChild(image);
+        div.appendChild(btn);
+        gallery.appendChild(div);
+    });
+}
+
+// Delete image
+function deleteImage(index) {
+    let images = JSON.parse(localStorage.getItem("images")) || [];
+    images.splice(index, 1);
+    localStorage.setItem("images", JSON.stringify(images));
+    loadImages();
+}
+</script>
+
+</body>
+</html>
