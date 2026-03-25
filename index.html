@@ -1,23 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Receipt Manager</title>
-  <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 10px; background: #f4f4f4; }
-    h2 { margin-bottom: 5px; }
-    input, select, button { padding: 8px; margin: 5px; font-size: 14px; border-radius: 5px; }
-    img { width: 100px; border-radius: 8px; margin: 5px; }
-    #gallery { display: flex; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
-    .imgBox { position: relative; border:1px solid #ccc; margin:10px; padding:10px; border-radius:10px; background:white; }
-    .deleteBtn { position: absolute; top: 5px; right: 5px; background:red; color:white; border:none; padding: 2px 6px; border-radius:5px; cursor:pointer; }
-    .downloadBtn { margin-top:5px; padding: 5px 10px; border-radius:5px; border:none; background:#007AFF; color:white; cursor:pointer; }
-    .downloadBtn:hover { background:#005BBB; }
-    small { display:block; margin-top: 3px; color:#555; }
-    .categorySelect { margin-bottom: 5px; }
-    #expenseSummary { margin-top: 20px; text-align:left; max-width: 400px; margin-left:auto; margin-right:auto; background:white; padding:10px; border-radius:10px; border:1px solid #ccc; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Receipt Manager</title>
+<style>
+  body { font-family: Arial; text-align: center; padding: 10px; background:#f4f4f4; }
+  h2 { margin-bottom: 5px; }
+  input, select, button { padding:8px; margin:5px; font-size:14px; border-radius:5px; }
+  img { width:100px; border-radius:8px; margin:5px; }
+  #gallery { display:flex; flex-wrap:wrap; justify-content:center; margin-top:20px; }
+  .imgBox { position:relative; border:1px solid #ccc; margin:10px; padding:10px; border-radius:10px; background:white; }
+  .deleteBtn { position:absolute; top:5px; right:5px; background:red; color:white; border:none; padding:2px 6px; border-radius:5px; cursor:pointer; }
+  .downloadBtn { margin-top:5px; padding:5px 10px; border-radius:5px; border:none; background:#007AFF; color:white; cursor:pointer; }
+  .downloadBtn:hover { background:#005BBB; }
+  small { display:block; margin-top:3px; color:#555; }
+  .categorySelect { margin-bottom:5px; }
+  #expenseSummary { margin-top:20px; text-align:left; max-width:400px; margin-left:auto; margin-right:auto; background:white; padding:10px; border-radius:10px; border:1px solid #ccc; }
+</style>
 </head>
 <body>
 
@@ -29,18 +29,19 @@
   <option value="">Select category</option>
   <option value="Fuel">Fuel</option>
   <option value="Food">Food</option>
-  <option value="Shopping">Shopping</option>
-  <option value="Other">Other</option>
+  <option value="Car Service">Car Service</option>
+  <option value="Insurance">Insurance</option>
+  <option value="SIM Charges">SIM Charges</option>
 </select><br>
-<input type="number" id="amountInput" placeholder="Amount (₹)" min="0"><br>
+<input type="number" id="amountInput" placeholder="Amount ($)" min="0"><br>
 
 <img id="preview" style="display:none; width:200px; margin-top:10px;"><br>
 
-<button onclick="saveImage()">Save Receipt</button>
+<button onclick="saveReceipt()">Save Receipt</button>
 <button onclick="exportPDF()">Export All as PDF</button>
 
 <h3>🔍 Search</h3>
-<input type="text" id="searchInput" placeholder="Search by title or category..." oninput="loadImages()">
+<input type="text" id="searchInput" placeholder="Search by title or category..." oninput="loadReceipts()">
 
 <h3>Gallery</h3>
 <div id="gallery"></div>
@@ -48,6 +49,7 @@
 <div id="expenseSummary">
   <h4>📊 Monthly Expenses by Category</h4>
   <div id="summaryContent"></div>
+  <strong>Total: $<span id="totalAmount">0</span></strong>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -58,183 +60,155 @@ let selectedImage = "";
 // IndexedDB Setup
 let request = indexedDB.open("ReceiptDB", 1);
 request.onupgradeneeded = function(e) {
-    db = e.target.result;
-    db.createObjectStore("receipts", { autoIncrement: true });
+  db = e.target.result;
+  db.createObjectStore("receipts", { autoIncrement: true });
 };
 request.onsuccess = function(e) {
-    db = e.target.result;
-    loadImages();
+  db = e.target.result;
+  loadReceipts();
 };
 
 // Preview
-document.getElementById('fileInput').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = function() {
-        selectedImage = reader.result;
-        document.getElementById('preview').src = selectedImage;
-        document.getElementById('preview').style.display = "block";
-    };
-    reader.readAsDataURL(file);
+document.getElementById('fileInput').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  const reader = new FileReader();
+  reader.onload = function(){
+    selectedImage = reader.result;
+    document.getElementById('preview').src = selectedImage;
+    document.getElementById('preview').style.display = "block";
+  };
+  reader.readAsDataURL(file);
 });
 
-// Save Receipt
-function saveImage() {
-    const title = document.getElementById('titleInput').value.trim();
-    const category = document.getElementById('categoryInput').value;
-    const amount = parseFloat(document.getElementById('amountInput').value);
+// Save Receipt (DB + Download)
+function saveReceipt(){
+  const title = document.getElementById('titleInput').value.trim();
+  const category = document.getElementById('categoryInput').value;
+  const amount = parseFloat(document.getElementById('amountInput').value);
 
-    if (!selectedImage || !title || !category || !amount) {
-        return alert("Add image, title, category, and amount");
-    }
+  if(!selectedImage || !title || !category || !amount){
+    return alert("Add image, title, category, and amount");
+  }
 
-    const date = new Date().toISOString();
+  const date = new Date().toISOString();
 
-    let tx = db.transaction("receipts", "readwrite");
-    let store = tx.objectStore("receipts");
-    store.add({
-        image: selectedImage,
-        title,
-        category,
-        amount,
-        date
-    });
+  // Save to DB
+  let tx = db.transaction("receipts", "readwrite");
+  let store = tx.objectStore("receipts");
+  store.add({image:selectedImage, title, category, amount, date});
+  tx.oncomplete = function(){
+    selectedImage="";
+    document.getElementById('preview').style.display="none";
+    document.getElementById('titleInput').value="";
+    document.getElementById('categoryInput').value="";
+    document.getElementById('amountInput').value="";
+    loadReceipts();
+  };
 
-    tx.oncomplete = function() {
-        selectedImage = "";
-        document.getElementById('preview').style.display = "none";
-        document.getElementById('titleInput').value = "";
-        document.getElementById('categoryInput').value = "";
-        document.getElementById('amountInput').value = "";
-        loadImages();
-    };
+  // Trigger download -> iPhone Share Sheet -> Save to Files
+  const link = document.createElement('a');
+  link.href = selectedImage;
+  link.download = title+".png";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 // Load + Search + Expense Summary
-function loadImages() {
-    const gallery = document.getElementById('gallery');
-    const search = document.getElementById('searchInput').value.toLowerCase();
-    gallery.innerHTML = "";
+function loadReceipts(){
+  const gallery = document.getElementById('gallery');
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  gallery.innerHTML="";
+  let expenses={};
+  let total=0;
 
-    let expenses = {};
-    let tx = db.transaction("receipts", "readonly");
-    let store = tx.objectStore("receipts");
-    let request = store.openCursor();
+  let tx = db.transaction("receipts","readonly");
+  let store = tx.objectStore("receipts");
+  let request = store.openCursor();
 
-    request.onsuccess = function(e) {
-        let cursor = e.target.result;
-        if(cursor) {
-            let data = cursor.value;
+  request.onsuccess = function(e){
+    let cursor = e.target.result;
+    if(cursor){
+      let data = cursor.value;
+      // Monthly tracking
+      const now = new Date();
+      const d = new Date(data.date);
+      if(d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear()){
+        expenses[data.category] = (expenses[data.category]||0)+data.amount;
+        total += data.amount;
+      }
 
-            // Track total monthly expenses per category
-            const month = new Date(data.date).getMonth();
-            const year = new Date(data.date).getFullYear();
-            const now = new Date();
-            if(month === now.getMonth() && year === now.getFullYear()){
-                expenses[data.category] = (expenses[data.category] || 0) + data.amount;
-            }
+      // Filter
+      if(data.title.toLowerCase().includes(search) || data.category.toLowerCase().includes(search)){
+        let div = document.createElement('div');
+        div.className="imgBox";
 
-            if(data.title.toLowerCase().includes(search) || data.category.toLowerCase().includes(search)) {
-                let div = document.createElement('div');
-                div.className = "imgBox";
+        let img = document.createElement('img'); img.src=data.image;
+        let title = document.createElement('p'); title.innerText=data.title;
+        let cat = document.createElement('small'); cat.innerText="Category: "+data.category;
+        let amt = document.createElement('small'); amt.innerText="Amount: $"+data.amount;
+        let date = document.createElement('small'); date.innerText=new Date(data.date).toLocaleString();
 
-                let img = document.createElement('img');
-                img.src = data.image;
+        let deleteBtn = document.createElement('button'); deleteBtn.className="deleteBtn"; deleteBtn.innerText="X";
+        deleteBtn.onclick=function(){ deleteReceipt(cursor.key); };
+        let downloadBtn = document.createElement('button'); downloadBtn.className="downloadBtn"; downloadBtn.innerText="Download";
+        downloadBtn.onclick=function(){
+          const link = document.createElement('a'); link.href=data.image; link.download=data.title+".png";
+          document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        };
 
-                let title = document.createElement('p');
-                title.innerText = data.title;
+        div.appendChild(deleteBtn); div.appendChild(img); div.appendChild(title);
+        div.appendChild(cat); div.appendChild(amt); div.appendChild(date); div.appendChild(downloadBtn);
+        gallery.appendChild(div);
+      }
 
-                let cat = document.createElement('small');
-                cat.innerText = "Category: " + data.category;
+      cursor.continue();
+    }
 
-                let amt = document.createElement('small');
-                amt.innerText = "Amount: ₹" + data.amount;
-
-                let date = document.createElement('small');
-                date.innerText = new Date(data.date).toLocaleString();
-
-                let deleteBtn = document.createElement('button');
-                deleteBtn.className = "deleteBtn";
-                deleteBtn.innerText = "X";
-                deleteBtn.onclick = function(){ deleteImage(cursor.key); };
-
-                let downloadBtn = document.createElement('button');
-                downloadBtn.className = "downloadBtn";
-                downloadBtn.innerText = "Download";
-                downloadBtn.onclick = function() {
-                    const link = document.createElement('a');
-                    link.href = data.image;
-                    link.download = data.title + ".png";
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                };
-
-                div.appendChild(deleteBtn);
-                div.appendChild(img);
-                div.appendChild(title);
-                div.appendChild(cat);
-                div.appendChild(amt);
-                div.appendChild(date);
-                div.appendChild(downloadBtn);
-                gallery.appendChild(div);
-            }
-
-            cursor.continue();
-        }
-
-        // Update expense summary
-        const summaryDiv = document.getElementById('summaryContent');
-        summaryDiv.innerHTML = "";
-        for(let cat in expenses){
-            summaryDiv.innerHTML += `<p>${cat}: ₹${expenses[cat]}</p>`;
-        }
-    };
+    // Update expense summary
+    const summaryDiv=document.getElementById('summaryContent'); summaryDiv.innerHTML="";
+    for(let cat in expenses){ summaryDiv.innerHTML += `<p>${cat}: $${expenses[cat]}</p>`; }
+    document.getElementById('totalAmount').innerText=total.toFixed(2);
+  };
 }
 
 // Delete
-function deleteImage(key) {
-    let tx = db.transaction("receipts", "readwrite");
-    let store = tx.objectStore("receipts");
-    store.delete(key);
-    tx.oncomplete = loadImages;
+function deleteReceipt(key){
+  let tx = db.transaction("receipts","readwrite");
+  let store = tx.objectStore("receipts");
+  store.delete(key);
+  tx.oncomplete = loadReceipts;
 }
 
-// Export All as PDF
-function exportPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    let y = 10;
+// Export PDF
+function exportPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  let y=10;
 
-    let tx = db.transaction("receipts", "readonly");
-    let store = tx.objectStore("receipts");
-    let request = store.openCursor();
+  let tx = db.transaction("receipts","readonly");
+  let store = tx.objectStore("receipts");
+  let request = store.openCursor();
 
-    request.onsuccess = function(e){
-        let cursor = e.target.result;
-        if(cursor){
-            let data = cursor.value;
-            doc.setFontSize(12);
-            doc.text(`Title: ${data.title}`, 10, y); y+=6;
-            doc.text(`Category: ${data.category}`, 10, y); y+=6;
-            doc.text(`Amount: ₹${data.amount}`, 10, y); y+=6;
-            doc.text(`Date: ${new Date(data.date).toLocaleString()}`, 10, y); y+=6;
-
-            // Add image
-            if(data.image){
-                const imgProps = doc.getImageProperties(data.image);
-                const pdfWidth = 100;
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                doc.addImage(data.image, 'PNG', 10, y, pdfWidth, pdfHeight);
-                y += pdfHeight + 10;
-            }
-
-            if(y > 250){ doc.addPage(); y = 10; }
-            cursor.continue();
-        } else {
-            doc.save("All_Receipts.pdf");
-        }
-    };
+  request.onsuccess=function(e){
+    let cursor=e.target.result;
+    if(cursor){
+      let data=cursor.value;
+      doc.setFontSize(12);
+      doc.text(`Title: ${data.title}`,10,y); y+=6;
+      doc.text(`Category: ${data.category}`,10,y); y+=6;
+      doc.text(`Amount: $${data.amount}`,10,y); y+=6;
+      doc.text(`Date: ${new Date(data.date).toLocaleString()}`,10,y); y+=6;
+      if(data.image){
+        const imgProps=doc.getImageProperties(data.image);
+        const pdfWidth=100;
+        const pdfHeight=(imgProps.height*pdfWidth)/imgProps.width;
+        doc.addImage(data.image,'PNG',10,y,pdfWidth,pdfHeight); y+=pdfHeight+10;
+      }
+      if(y>250){ doc.addPage(); y=10; }
+      cursor.continue();
+    }else{ doc.save("All_Receipts.pdf"); }
+  };
 }
 </script>
 </body>
