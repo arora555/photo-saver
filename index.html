@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Offline Image Saver - Fixed</title>
+  <title>Smart Receipt Saver</title>
   <style>
-    body { font-family: Arial; text-align: center; padding: 20px; }
-    img { width: 120px; margin: 10px; border-radius: 10px; }
+    body { font-family: Arial; text-align: center; padding: 10px; }
+    img { width: 100px; margin: 10px; border-radius: 10px; }
     #gallery { display: flex; flex-wrap: wrap; justify-content: center; }
-    .imgBox { position: relative; }
-    button { margin: 10px; padding: 10px; }
+    .imgBox { position: relative; border:1px solid #ccc; margin:10px; padding:10px; border-radius:10px;}
+    button { margin: 5px; padding: 8px; }
+    input { padding: 8px; margin: 5px; width: 80%; }
     .deleteBtn {
       position: absolute;
       top: 5px;
@@ -16,105 +16,143 @@
       background: red;
       color: white;
       border: none;
-      cursor: pointer;
     }
   </style>
 </head>
 
 <body>
 
-<h2>📸 Offline Photo Saver (Fixed)</h2>
+<h2>📸 Smart Receipt Saver</h2>
 
-<input type="file" id="fileInput" accept="image/*">
-<br>
+<input type="file" id="fileInput" accept="image/*"><br>
+<input type="text" id="titleInput" placeholder="Enter receipt name"><br>
 
-<img id="preview" style="display:none; width:200px; margin-top:10px;">
-<br>
+<img id="preview" style="display:none; width:200px;"><br>
 
-<button onclick="saveImage()">Save Image</button>
+<button onclick="saveImage()">Save</button>
+
+<h3>🔍 Search</h3>
+<input type="text" id="searchInput" placeholder="Search receipts..." oninput="loadImages()">
 
 <h3>Gallery</h3>
 <div id="gallery"></div>
 
 <script>
-let selectedImage = "";
+let db;
 
-// Load saved images on start
-window.onload = function() {
+// Open DB
+let request = indexedDB.open("ReceiptDB", 1);
+
+request.onupgradeneeded = function(e) {
+    db = e.target.result;
+    db.createObjectStore("receipts", { autoIncrement: true });
+};
+
+request.onsuccess = function(e) {
+    db = e.target.result;
     loadImages();
 };
 
-// Preview image
+// Preview
+let selectedImage = "";
+
 document.getElementById('fileInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
-    if (!file) return;
-
     const reader = new FileReader();
+
     reader.onload = function() {
         selectedImage = reader.result;
-        const preview = document.getElementById('preview');
-        preview.src = selectedImage;
-        preview.style.display = "block";
+        document.getElementById('preview').src = selectedImage;
+        document.getElementById('preview').style.display = "block";
     };
+
     reader.readAsDataURL(file);
 });
 
-// Save image
+// Save
 function saveImage() {
-    if (!selectedImage) {
-        alert("Select an image first");
-        return;
+    const title = document.getElementById('titleInput').value;
+    if (!selectedImage || !title) {
+        return alert("Add image and title");
     }
 
-    try {
-        let images = JSON.parse(localStorage.getItem("images")) || [];
-        images.push(selectedImage);
-        localStorage.setItem("images", JSON.stringify(images));
+    const date = new Date().toLocaleString();
 
-        alert("Image saved!");
+    let tx = db.transaction("receipts", "readwrite");
+    let store = tx.objectStore("receipts");
 
+    store.add({
+        image: selectedImage,
+        title: title,
+        date: date
+    });
+
+    tx.oncomplete = function() {
         selectedImage = "";
         document.getElementById('preview').style.display = "none";
-
+        document.getElementById('titleInput').value = "";
         loadImages();
-    } catch (e) {
-        alert("Storage failed. Try opening in Chrome browser.");
-    }
+    };
 }
 
-// Load gallery
+// Load + Search
 function loadImages() {
     const gallery = document.getElementById('gallery');
+    const search = document.getElementById('searchInput').value.toLowerCase();
     gallery.innerHTML = "";
 
-    let images = JSON.parse(localStorage.getItem("images")) || [];
+    let tx = db.transaction("receipts", "readonly");
+    let store = tx.objectStore("receipts");
 
-    images.forEach((img, index) => {
-        const div = document.createElement('div');
-        div.className = "imgBox";
+    let request = store.openCursor();
 
-        const image = document.createElement('img');
-        image.src = img;
+    request.onsuccess = function(e) {
+        let cursor = e.target.result;
 
-        const btn = document.createElement('button');
-        btn.innerText = "X";
-        btn.className = "deleteBtn";
-        btn.onclick = function() {
-            deleteImage(index);
-        };
+        if (cursor) {
+            let data = cursor.value;
 
-        div.appendChild(image);
-        div.appendChild(btn);
-        gallery.appendChild(div);
-    });
+            if (data.title.toLowerCase().includes(search)) {
+
+                let div = document.createElement('div');
+                div.className = "imgBox";
+
+                let img = document.createElement('img');
+                img.src = data.image;
+
+                let title = document.createElement('p');
+                title.innerText = data.title;
+
+                let date = document.createElement('small');
+                date.innerText = data.date;
+
+                let btn = document.createElement('button');
+                btn.innerText = "X";
+                btn.className = "deleteBtn";
+                btn.onclick = function() {
+                    deleteImage(cursor.key);
+                };
+
+                div.appendChild(btn);
+                div.appendChild(img);
+                div.appendChild(title);
+                div.appendChild(date);
+
+                gallery.appendChild(div);
+            }
+
+            cursor.continue();
+        }
+    };
 }
 
-// Delete 
-function deleteImage(index) {
-    let images = JSON.parse(localStorage.getItem("images")) || [];
-    images.splice(index, 1);
-    localStorage.setItem("images", JSON.stringify(images));
-    loadImages();
+// Delete
+function deleteImage(key) {
+    let tx = db.transaction("receipts", "readwrite");
+    let store = tx.objectStore("receipts");
+
+    store.delete(key);
+    tx.oncomplete = loadImages;
 }
 </script>
 
