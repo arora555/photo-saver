@@ -17,6 +17,7 @@
   small { display:block; margin-top:3px; color:#555; }
   .categorySelect { margin-bottom:5px; }
   #expenseSummary { margin-top:20px; text-align:left; max-width:400px; margin-left:auto; margin-right:auto; background:white; padding:10px; border-radius:10px; border:1px solid #ccc; }
+  #budgetWarning { color:red; font-weight:bold; }
 </style>
 </head>
 <body>
@@ -32,9 +33,12 @@
   <option value="Car Service">Car Service</option>
   <option value="Insurance">Insurance</option>
   <option value="SIM Charges">SIM Charges</option>
+  <option value="Custom">Add New Category</option>
 </select><br>
+<input type="text" id="customCategoryInput" placeholder="Enter new category" style="display:none;"><br>
 <input type="number" id="amountInput" placeholder="Amount ($)" min="0"><br>
 <input type="text" id="notesInput" placeholder="Notes (optional)"><br>
+<input type="number" id="budgetInput" placeholder="Set yearly budget for this category ($)" min="0"><br>
 
 <img id="preview" style="display:none; width:200px; margin-top:10px;"><br>
 
@@ -43,7 +47,7 @@
 <button onclick="exportCSV()">Export CSV for Numbers</button>
 
 <h3>🔍 Search</h3>
-<input type="text" id="searchInput" placeholder="Search by category..." oninput="loadReceipts()">
+<input type="text" id="searchInput" placeholder="Search by category or notes..." oninput="loadReceipts()">
 
 <h3>Gallery</h3>
 <div id="gallery"></div>
@@ -51,6 +55,7 @@
 <div id="expenseSummary">
   <h4>📊 Yearly Expenses by Category</h4>
   <div id="summaryContent"></div>
+  <div id="budgetWarning"></div>
   <strong>Total: $<span id="totalAmount">0</span></strong>
 </div>
 
@@ -71,7 +76,16 @@ request.onsuccess = e => {
   loadReceipts();
 };
 
-// Preview
+// Show custom category input if selected
+document.getElementById('categoryInput').addEventListener('change', e=>{
+  if(e.target.value === "Custom"){
+    document.getElementById('customCategoryInput').style.display="block";
+  } else {
+    document.getElementById('customCategoryInput').style.display="none";
+  }
+});
+
+// Preview image
 document.getElementById('fileInput').addEventListener('change', e=>{
   const file = e.target.files[0];
   const reader = new FileReader();
@@ -85,10 +99,14 @@ document.getElementById('fileInput').addEventListener('change', e=>{
 
 // Save Receipt
 function saveReceipt(){
+  let category = document.getElementById('categoryInput').value;
+  const customCat = document.getElementById('customCategoryInput').value.trim();
+  if(category === "Custom" && customCat) category = customCat;
+
   const date = document.getElementById('dateInput').value;
-  const category = document.getElementById('categoryInput').value;
   const amount = parseFloat(document.getElementById('amountInput').value);
   const notes = document.getElementById('notesInput').value;
+  const budget = parseFloat(document.getElementById('budgetInput').value);
 
   if(!selectedImage || !date || !category || !amount){
     return alert("Add image, date, category, and amount");
@@ -96,18 +114,21 @@ function saveReceipt(){
 
   let tx = db.transaction("receipts","readwrite");
   let store = tx.objectStore("receipts");
-  store.add({image:selectedImage, date, category, amount, notes, created: new Date().toISOString()});
+  store.add({image:selectedImage, date, category, amount, notes, budget:budget||0, created: new Date().toISOString()});
   tx.oncomplete = ()=>{
     selectedImage="";
     document.getElementById('preview').style.display="none";
     document.getElementById('dateInput').value="";
     document.getElementById('categoryInput').value="";
+    document.getElementById('customCategoryInput').value="";
+    document.getElementById('customCategoryInput').style.display="none";
     document.getElementById('amountInput').value="";
     document.getElementById('notesInput').value="";
+    document.getElementById('budgetInput').value="";
     loadReceipts();
   };
 
-  // Download for Files (iPhone remembers last folder per category)
+  // Download for Files
   const link = document.createElement('a');
   link.href = selectedImage;
   link.download = `${category}_${date}.png`;
@@ -117,12 +138,12 @@ function saveReceipt(){
   categoryFolders[category] = true;
 }
 
-// Load Receipts + Summary
+// Load Receipts + Summary + Budget Warning
 function loadReceipts(){
   const gallery = document.getElementById('gallery');
   const search = document.getElementById('searchInput').value.toLowerCase();
   gallery.innerHTML="";
-  let expenses={}; let total=0;
+  let expenses={}; let budgets={}; let total=0;
 
   let tx = db.transaction("receipts","readonly");
   let store = tx.objectStore("receipts");
@@ -134,12 +155,13 @@ function loadReceipts(){
       const data = cursor.value;
       const year = new Date().getFullYear();
       const d = new Date(data.date);
-      if(d.getFullYear()===year){ 
+      if(d.getFullYear()===year){
         expenses[data.category] = (expenses[data.category]||0)+data.amount; 
-        total+=data.amount; 
+        if(data.budget) budgets[data.category]=data.budget;
+        total+=data.amount;
       }
 
-      if(data.category.toLowerCase().includes(search)){
+      if((data.category.toLowerCase().includes(search)) || (data.notes.toLowerCase().includes(search))){
         let div=document.createElement('div'); div.className="imgBox";
         let img=document.createElement('img'); img.src=data.image;
         let dateText=document.createElement('p'); dateText.innerText=`Date: ${data.date}`;
@@ -147,8 +169,7 @@ function loadReceipts(){
         let amt=document.createElement('small'); amt.innerText="Amount: $"+data.amount;
         let notes=document.createElement('small'); notes.innerText="Notes: "+data.notes;
 
-        let key = cursor.key; // capture key properly
-
+        let key = cursor.key;
         let deleteBtn=document.createElement('button'); deleteBtn.className="deleteBtn"; deleteBtn.innerText="X";
         deleteBtn.onclick=()=>deleteReceipt(key);
 
@@ -165,12 +186,16 @@ function loadReceipts(){
       }
 
       cursor.continue();
+    } else {
+      const summaryDiv=document.getElementById('summaryContent'); summaryDiv.innerHTML="";
+      let warningText="";
+      for(let cat in expenses){ 
+        summaryDiv.innerHTML+=`<p>${cat}: $${expenses[cat]}</p>`;
+        if(budgets[cat] && expenses[cat]>budgets[cat]) warningText+=`${cat} exceeded budget!<br>`;
+      }
+      document.getElementById('budgetWarning').innerHTML = warningText;
+      document.getElementById('totalAmount').innerText=total.toFixed(2);
     }
-
-    // Update summary
-    const summaryDiv=document.getElementById('summaryContent'); summaryDiv.innerHTML="";
-    for(let cat in expenses){ summaryDiv.innerHTML+=`<p>${cat}: $${expenses[cat]}</p>`;}
-    document.getElementById('totalAmount').innerText=total.toFixed(2);
   };
 }
 
@@ -211,25 +236,48 @@ function exportPDF(){
   };
 }
 
-// Export CSV for Numbers (Date, Category, Amount, Notes)
+// Export CSV for Numbers with Category & Yearly Totals
 function exportCSV(){
-  let csv = "Date,Category,Amount,Notes\n";
-  let tx=db.transaction("receipts","readonly");
-  let store=tx.objectStore("receipts");
-  store.openCursor().onsuccess=e=>{
-    let cursor=e.target.result;
+  let csv = "Date,Category,Amount,Notes,Category Total,Yearly Total\n";
+  let tx = db.transaction("receipts","readonly");
+  let store = tx.objectStore("receipts");
+
+  let expenses = {};
+  let yearlyTotal = 0;
+
+  store.openCursor().onsuccess = e => {
+    let cursor = e.target.result;
     if(cursor){
-      const d=cursor.value;
-      csv+=`${d.date},${d.category},${d.amount},"${d.notes}"\n`;
+      const d = cursor.value;
+      const year = new Date().getFullYear();
+      const receiptYear = new Date(d.date).getFullYear();
+      if(receiptYear === year){
+        expenses[d.category] = (expenses[d.category] || 0) + d.amount;
+        yearlyTotal += d.amount;
+      }
       cursor.continue();
-    }else{
-      const blob=new Blob([csv],{type:'text/csv'});
-      const link=document.createElement('a');
-      link.href=URL.createObjectURL(blob);
-      link.download="Receipts_For_Numbers.csv";
-      document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    } else {
+      store.openCursor().onsuccess = e2 => {
+        let c2 = e2.target.result;
+        if(c2){
+          const d2 = c2.value;
+          const receiptYear = new Date(d2.date).getFullYear();
+          if(receiptYear === new Date().getFullYear()){
+            const catTotal = expenses[d2.category].toFixed(2);
+            const yTotal = yearlyTotal.toFixed(2);
+            csv += `${d2.date},${d2.category},${d2.amount},"${d2.notes}",${catTotal},${yTotal}\n`;
+          }
+          c2.continue();
+        } else {
+          const blob=new Blob([csv],{type:'text/csv'});
+          const link=document.createElement('a');
+          link.href=URL.createObjectURL(blob);
+          link.download="Receipts_For_Numbers.csv";
+          document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+      }
     }
-  }
+  };
 }
 </script>
 </body>
