@@ -1,286 +1,102 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Receipt Manager</title>
-<style>
-  body { font-family: Arial; text-align: center; padding: 10px; background:#f4f4f4; }
-  h2 { margin-bottom: 5px; }
-  input, select, button { padding:8px; margin:5px; font-size:14px; border-radius:5px; }
-  img { width:100px; border-radius:8px; margin:5px; }
-  #gallery { display:flex; flex-wrap:wrap; justify-content:center; margin-top:20px; }
-  .imgBox { position:relative; border:1px solid #ccc; margin:10px; padding:10px; border-radius:10px; background:white; }
-  .deleteBtn { position:absolute; top:5px; right:5px; background:red; color:white; border:none; padding:2px 6px; border-radius:5px; cursor:pointer; }
-  .downloadBtn { margin-top:5px; padding:5px 10px; border-radius:5px; border:none; background:#007AFF; color:white; cursor:pointer; }
-  .downloadBtn:hover { background:#005BBB; }
-  small { display:block; margin-top:3px; color:#555; }
-  .categorySelect { margin-bottom:5px; }
-  #expenseSummary { margin-top:20px; text-align:left; max-width:400px; margin-left:auto; margin-right:auto; background:white; padding:10px; border-radius:10px; border:1px solid #ccc; }
-  #budgetWarning { color:red; font-weight:bold; }
-</style>
+  <title>Unfolding</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      padding: 40px;
+      background-color: #f9f9f9;
+    }
+
+    h1 {
+      font-size: 40px;
+      margin-bottom: 5px;
+    }
+
+    p.tagline {
+      color: gray;
+      margin-bottom: 30px;
+    }
+
+    button {
+      margin: 8px;
+      padding: 10px 18px;
+      border: none;
+      background-color: black;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      opacity: 0.8;
+    }
+
+    .thought {
+      display: none;
+      margin: 20px auto;
+      padding: 15px;
+      max-width: 500px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+  </style>
 </head>
+
 <body>
 
-<h2>📸 Smart Receipt Manager</h2>
+<h1>Unfolding</h1>
+<p class="tagline">Exploring the inner world</p>
 
-<input type="file" id="fileInput" accept="image/*"><br>
-<input type="date" id="dateInput"><br>
-<select id="categoryInput" class="categorySelect">
-  <option value="">Select category</option>
-  <option value="Fuel">Fuel</option>
-  <option value="Food">Food</option>
-  <option value="Car Service">Car Service</option>
-  <option value="Insurance">Insurance</option>
-  <option value="SIM Charges">SIM Charges</option>
-  <option value="Custom">Add New Category</option>
-</select><br>
-<input type="text" id="customCategoryInput" placeholder="Enter new category" style="display:none;"><br>
-<input type="number" id="amountInput" placeholder="Amount ($)" min="0"><br>
-<input type="text" id="notesInput" placeholder="Notes (optional)"><br>
-<input type="number" id="budgetInput" placeholder="Set yearly budget for this category ($)" min="0"><br>
+<p>Select your mood</p>
 
-<img id="preview" style="display:none; width:200px; margin-top:10px;"><br>
+<button onclick="filterMood('deep')">💭 Deep</button>
+<button onclick="filterMood('calm')">🌊 Calm</button>
+<button onclick="filterMood('motivation')">🔥 Motivation</button>
+<button onclick="filterMood('happy')">❤️ Light</button>
+<button onclick="showAll()">Show All</button>
 
-<button onclick="saveReceipt()">Save Receipt</button>
-<button onclick="exportPDF()">Export All as PDF</button>
-<button onclick="exportCSV()">Export CSV for Numbers</button>
+<!-- Thoughts -->
 
-<h3>🔍 Search</h3>
-<input type="text" id="searchInput" placeholder="Search by category or notes..." oninput="loadReceipts()">
-
-<!-- Yearly Expenses Summary first -->
-<div id="expenseSummary">
-  <h4>📊 Yearly Expenses by Category</h4>
-  <div id="summaryContent"></div>
-  <div id="budgetWarning"></div>
-  <strong>Total: $<span id="totalAmount">0</span></strong>
+<div class="thought deep">
+  You don’t find yourself. You uncover what was always there.
 </div>
 
-<!-- Gallery goes below -->
-<h3>Gallery</h3>
-<div id="gallery"></div>
+<div class="thought calm">
+  Not everything needs a reaction. Some things just need space.
+</div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<div class="thought motivation">
+  Discipline is choosing what you want most over what you want now.
+</div>
+
+<div class="thought happy">
+  Life feels lighter when you stop holding everything so tightly.
+</div>
+
 <script>
-let db;
-let selectedImage = "";
-let categoryFolders = {};
-
-// IndexedDB setup
-let request = indexedDB.open("ReceiptDB", 1);
-request.onupgradeneeded = e => {
-  db = e.target.result;
-  db.createObjectStore("receipts", { autoIncrement: true });
-};
-request.onsuccess = e => {
-  db = e.target.result;
-  loadReceipts();
-};
-
-// Show custom category input if selected
-document.getElementById('categoryInput').addEventListener('change', e=>{
-  if(e.target.value === "Custom"){
-    document.getElementById('customCategoryInput').style.display="block";
-  } else {
-    document.getElementById('customCategoryInput').style.display="none";
-  }
-});
-
-// Preview image
-document.getElementById('fileInput').addEventListener('change', e=>{
-  const file = e.target.files[0];
-  const reader = new FileReader();
-  reader.onload = ()=> {
-    selectedImage = reader.result;
-    document.getElementById('preview').src = selectedImage;
-    document.getElementById('preview').style.display="block";
-  };
-  reader.readAsDataURL(file);
-});
-
-// Save Receipt
-function saveReceipt(){
-  let category = document.getElementById('categoryInput').value;
-  const customCat = document.getElementById('customCategoryInput').value.trim();
-  if(category === "Custom" && customCat) category = customCat;
-
-  const date = document.getElementById('dateInput').value;
-  const amount = parseFloat(document.getElementById('amountInput').value);
-  const notes = document.getElementById('notesInput').value;
-  const budget = parseFloat(document.getElementById('budgetInput').value);
-
-  if(!selectedImage || !date || !category || !amount){
-    return alert("Add image, date, category, and amount");
+function filterMood(mood) {
+  let thoughts = document.getElementsByClassName('thought');
+  for (let i = 0; i < thoughts.length; i++) {
+    thoughts[i].style.display = 'none';
   }
 
-  let tx = db.transaction("receipts","readwrite");
-  let store = tx.objectStore("receipts");
-  store.add({image:selectedImage, date, category, amount, notes, budget:budget||0, created: new Date().toISOString()});
-  tx.oncomplete = ()=>{
-    selectedImage="";
-    document.getElementById('preview').style.display="none";
-    document.getElementById('dateInput').value="";
-    document.getElementById('categoryInput').value="";
-    document.getElementById('customCategoryInput').value="";
-    document.getElementById('customCategoryInput').style.display="none";
-    document.getElementById('amountInput').value="";
-    document.getElementById('notesInput').value="";
-    document.getElementById('budgetInput').value="";
-    loadReceipts();
-  };
-
-  // Download for Files
-  const link = document.createElement('a');
-  link.href = selectedImage;
-  link.download = `${category}_${date}.png`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  categoryFolders[category] = true;
+  let selected = document.getElementsByClassName(mood);
+  for (let i = 0; i < selected.length; i++) {
+    selected[i].style.display = 'block';
+  }
 }
 
-// Load Receipts + Summary + Budget Warning
-function loadReceipts(){
-  const gallery = document.getElementById('gallery');
-  const search = document.getElementById('searchInput').value.toLowerCase();
-  gallery.innerHTML="";
-  let expenses={}; let budgets={}; let total=0;
-
-  let tx = db.transaction("receipts","readonly");
-  let store = tx.objectStore("receipts");
-  let request = store.openCursor();
-
-  request.onsuccess = e => {
-    let cursor = e.target.result;
-    if(cursor){
-      const data = cursor.value;
-      const year = new Date().getFullYear();
-      const d = new Date(data.date);
-      if(d.getFullYear()===year){
-        expenses[data.category] = (expenses[data.category]||0)+data.amount; 
-        if(data.budget) budgets[data.category]=data.budget;
-        total+=data.amount;
-      }
-
-      if((data.category.toLowerCase().includes(search)) || (data.notes.toLowerCase().includes(search))){
-        let div=document.createElement('div'); div.className="imgBox";
-        let img=document.createElement('img'); img.src=data.image;
-        let dateText=document.createElement('p'); dateText.innerText=`Date: ${data.date}`;
-        let cat=document.createElement('small'); cat.innerText="Category: "+data.category;
-        let amt=document.createElement('small'); amt.innerText="Amount: $"+data.amount;
-        let notes=document.createElement('small'); notes.innerText="Notes: "+data.notes;
-
-        let key = cursor.key;
-        let deleteBtn=document.createElement('button'); deleteBtn.className="deleteBtn"; deleteBtn.innerText="X";
-        deleteBtn.onclick=()=>deleteReceipt(key);
-
-        let downloadBtn=document.createElement('button'); downloadBtn.className="downloadBtn"; downloadBtn.innerText="Download";
-        downloadBtn.onclick=()=>{
-          const link=document.createElement('a'); link.href=data.image;
-          link.download = `${data.category}_${data.date}.png`;
-          document.body.appendChild(link); link.click(); document.body.removeChild(link);
-        };
-
-        div.appendChild(deleteBtn); div.appendChild(img); div.appendChild(dateText);
-        div.appendChild(cat); div.appendChild(amt); div.appendChild(notes); div.appendChild(downloadBtn);
-        gallery.appendChild(div);
-      }
-
-      cursor.continue();
-    } else {
-      const summaryDiv=document.getElementById('summaryContent'); summaryDiv.innerHTML="";
-      let warningText="";
-      for(let cat in expenses){ 
-        summaryDiv.innerHTML+=`<p>${cat}: $${expenses[cat]}</p>`;
-        if(budgets[cat] && expenses[cat]>budgets[cat]) warningText+=`${cat} exceeded budget!<br>`;
-      }
-      document.getElementById('budgetWarning').innerHTML = warningText;
-      document.getElementById('totalAmount').innerText=total.toFixed(2);
-    }
-  };
-}
-
-// Delete
-function deleteReceipt(key){
-  let tx = db.transaction("receipts","readwrite");
-  let store = tx.objectStore("receipts");
-  store.delete(key);
-  tx.oncomplete = loadReceipts;
-}
-
-// Export PDF
-function exportPDF(){
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  let y=10;
-  let tx = db.transaction("receipts","readonly");
-  let store = tx.objectStore("receipts");
-  let request = store.openCursor();
-  request.onsuccess=e=>{
-    let cursor=e.target.result;
-    if(cursor){
-      let data=cursor.value;
-      doc.setFontSize(12);
-      doc.text(`Date: ${data.date}`,10,y); y+=6;
-      doc.text(`Category: ${data.category}`,10,y); y+=6;
-      doc.text(`Amount: $${data.amount}`,10,y); y+=6;
-      doc.text(`Notes: ${data.notes}`,10,y); y+=6;
-      if(data.image){
-        const imgProps=doc.getImageProperties(data.image);
-        const pdfWidth=100;
-        const pdfHeight=(imgProps.height*pdfWidth)/imgProps.width;
-        doc.addImage(data.image,'PNG',10,y,pdfWidth,pdfHeight); y+=pdfHeight+10;
-      }
-      if(y>250){ doc.addPage(); y=10;}
-      cursor.continue();
-    }else{ doc.save("All_Receipts.pdf"); }
-  };
-}
-
-// Export CSV for Numbers with Category & Yearly Totals
-function exportCSV(){
-  let csv = "Date,Category,Amount,Notes,Category Total,Yearly Total\n";
-  let tx = db.transaction("receipts","readonly");
-  let store = tx.objectStore("receipts");
-
-  let expenses = {};
-  let yearlyTotal = 0;
-
-  store.openCursor().onsuccess = e => {
-    let cursor = e.target.result;
-    if(cursor){
-      const d = cursor.value;
-      const year = new Date().getFullYear();
-      const receiptYear = new Date(d.date).getFullYear();
-      if(receiptYear === year){
-        expenses[d.category] = (expenses[d.category] || 0) + d.amount;
-        yearlyTotal += d.amount;
-      }
-      cursor.continue();
-    } else {
-      store.openCursor().onsuccess = e2 => {
-        let c2 = e2.target.result;
-        if(c2){
-          const d2 = c2.value;
-          const receiptYear = new Date(d2.date).getFullYear();
-          if(receiptYear === new Date().getFullYear()){
-            const catTotal = expenses[d2.category].toFixed(2);
-            const yTotal = yearlyTotal.toFixed(2);
-            csv += `${d2.date},${d2.category},${d2.amount},"${d2.notes}",${catTotal},${yTotal}\n`;
-          }
-          c2.continue();
-        } else {
-          const blob=new Blob([csv],{type:'text/csv'});
-          const link=document.createElement('a');
-          link.href=URL.createObjectURL(blob);
-          link.download="Receipts_For_Numbers.csv";
-          document.body.appendChild(link); link.click(); document.body.removeChild(link);
-        }
-      }
-    }
-  };
+function showAll() {
+  let thoughts = document.getElementsByClassName('thought');
+  for (let i = 0; i < thoughts.length; i++) {
+    thoughts[i].style.display = 'block';
+  }
 }
 </script>
+
 </body>
 </html>
