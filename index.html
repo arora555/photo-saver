@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Digital Estonia Portal & Unfold Yourself</title>
+  <title>Welcome to Digital World</title>
   <style>
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -143,6 +143,26 @@
       opacity: 0.85;
       transform: scale(1.02);
     }
+
+    /* Learn With Us */
+    .learn-topic {
+      background: rgba(255,255,255,0.95);
+      padding: 20px;
+      margin: 15px 0;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .learn-content {
+      display: none;
+      margin-top: 10px;
+      padding: 15px;
+      background: #e0f7fa;
+      border-radius: 10px;
+      font-size: 18px;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
@@ -153,6 +173,7 @@
   <div class="menu-item" onclick="showSection('welcome')">Home</div>
   <div class="menu-item" onclick="showSection('services')">Services</div>
   <div class="menu-item" onclick="showSection('explore')">Explore Yourself</div>
+  <div class="menu-item" onclick="showSection('learn')">Learn With Us</div>
   <div class="menu-item" onclick="showSection('suggestions')">Give Suggestions</div>
 </div>
 
@@ -160,8 +181,8 @@
 <div id="main">
   <!-- Welcome -->
   <div id="welcome" class="section show">
-    <h1>Welcome to the Digital Estonia Portal</h1>
-    <p class="tagline">Experience secure, efficient, and innovative online services inspired by Estonia.</p>
+    <h1>Welcome to Digital World</h1>
+    <p class="tagline">Changing lives and caring about planet</p>
   </div>
 
   <!-- Services -->
@@ -182,6 +203,10 @@
     <div class="service-item">
       <h3>Voting & Governance</h3>
       <p>Participate in elections securely from anywhere using online e-voting systems.</p>
+    </div>
+    <div class="service-item">
+      <h3>Settings (Update Password for e-ID)</h3>
+      <p>Change your e-ID password securely to protect your digital identity.</p>
     </div>
   </div>
 
@@ -204,11 +229,52 @@
     </div>
   </div>
 
+  <!-- Learn With Us -->
+  <div id="learn" class="section">
+    <h1>Learn With Us</h1>
+    <p class="tagline">Choose a topic to explore:</p>
+
+    <div class="learn-topic" onclick="toggleLearn('grammar')">
+      <h3>Grammar</h3>
+      <div id="grammar" class="learn-content">
+        <p>Grammar rules, tips, and common mistakes explained clearly. Example:</p>
+        <ul>
+          <li>"I was talking" vs "I were talking" → correct is "I was talking".</li>
+          <li>Use past, present, and future forms correctly in sentences.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="learn-topic" onclick="toggleLearn('tenses')">
+      <h3>Tense Rules</h3>
+      <div id="tenses" class="learn-content">
+        <p>Understand past, present, and future tenses with examples:</p>
+        <ul>
+          <li>Past: "She walked to the store."</li>
+          <li>Present: "She walks to the store."</li>
+          <li>Future: "She will walk to the store."</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="learn-topic" onclick="toggleLearn('other')">
+      <h3>Other Stuff</h3>
+      <div id="other" class="learn-content">
+        <p>Additional resources and knowledge snippets to enhance your learning:</p>
+        <ul>
+          <li>Common English idioms</li>
+          <li>Writing tips</li>
+          <li>Quick reference guides</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
   <!-- Give Suggestions -->
   <div id="suggestions" class="section">
     <h1>Give Suggestions</h1>
     <p class="tagline">Your feedback matters. Share your thoughts or suggestions below:</p>
-    <form action="https://formspree.io/f/your-form-id" method="POST">
+    <form action="https://formspree.io/f/your-form-id" method="POST" onsubmit="alert('Thank you for your suggestion!');">
       <label for="name">Your Name</label>
       <input type="text" name="name" id="name" placeholder="Enter your name" required>
 
@@ -236,6 +302,12 @@ function showUnsolved() {
   const unsolved = document.getElementById('unsolved-text');
   unsolved.classList.add('show');
   unsolved.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function toggleLearn(id) {
+  const content = document.getElementById(id);
+  content.style.display = (content.style.display === 'block') ? 'none' : 'block';
+  content.scrollIntoView({behavior:'smooth', block:'start'});
 }
 </script>
 
