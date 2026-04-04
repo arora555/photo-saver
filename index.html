@@ -187,7 +187,6 @@
       font-weight:bold;
       color:#2d7a69;
     }
-
   </style>
 </head>
 <body>
@@ -261,12 +260,28 @@
     <p class="tagline">Choose a topic to explore:</p>
 
     <div class="learn-topic" onclick="toggleLearn('grammar')">
-      <h3>Grammar</h3>
+      <h3>Grammar – Articles (a, an, the)</h3>
       <div id="grammar" class="learn-content">
-        <p>Grammar rules, tips, and common mistakes explained clearly. Example:</p>
+        <p><strong>A / An – Indefinite Articles:</strong></p>
         <ul>
-          <li>"I was talking" vs "I were talking" → correct is "I was talking".</li>
-          <li>Use past, present, and future forms correctly in sentences.</li>
+          <li><strong>A</strong> → consonant sounds. Example: "a dog", "a university" (u sounds like 'you')</li>
+          <li><strong>An</strong> → vowel sounds. Example: "an apple", "an honest man" (h silent)</li>
+          <li>Use on <strong>first mention</strong> of nouns: "I saw a cat."</li>
+          <li>Use with <strong>professions</strong>: "She is a teacher."</li>
+          <li>Use with singular, countable nouns.</li>
+        </ul>
+        <p><strong>The – Definite Article:</strong></p>
+        <ul>
+          <li>Use for <strong>specific items / second mention</strong>: "I saw a cat. The cat was black."</li>
+          <li>Unique objects: "the sun", "the moon"</li>
+          <li>Rivers, oceans, deserts, mountain ranges: "the Nile", "the Pacific"</li>
+          <li>Superlatives & ordinals: "the best", "the first"</li>
+        </ul>
+        <p><strong>Zero Article:</strong></p>
+        <ul>
+          <li>General plurals: "Dogs are friendly"</li>
+          <li>Most countries/cities: "I live in Canada"</li>
+          <li>Languages, subjects: "I study English"</li>
         </ul>
       </div>
     </div>
@@ -274,23 +289,45 @@
     <div class="learn-topic" onclick="toggleLearn('tenses')">
       <h3>Tense Rules</h3>
       <div id="tenses" class="learn-content">
-        <p>Understand past, present, and future tenses with examples:</p>
-        <ul>
-          <li>Past: "She walked to the store."</li>
-          <li>Present: "She walks to the store."</li>
-          <li>Future: "She will walk to the store."</li>
-        </ul>
+        <table border="1" cellpadding="8" style="border-collapse: collapse; width:100%; text-align:left;">
+          <tr><th>Tense</th><th>Structure</th><th>Example</th></tr>
+          <tr><td>Present Simple</td><td>Subject + base verb</td><td>I walk to school every day.</td></tr>
+          <tr><td>Present Continuous</td><td>Subject + am/is/are + verb-ing</td><td>She is walking to school now.</td></tr>
+          <tr><td>Present Perfect</td><td>Subject + has/have + past participle</td><td>They have finished their homework.</td></tr>
+          <tr><td>Present Perfect Continuous</td><td>Subject + has/have been + verb-ing</td><td>I have been studying for 2 hours.</td></tr>
+          <tr><td>Past Simple</td><td>Subject + past verb</td><td>He watched a movie yesterday.</td></tr>
+          <tr><td>Past Continuous</td><td>Subject + was/were + verb-ing</td><td>She was reading when I called.</td></tr>
+          <tr><td>Past Perfect</td><td>Subject + had + past participle</td><td>I had eaten before he arrived.</td></tr>
+          <tr><td>Past Perfect Continuous</td><td>Subject + had been + verb-ing</td><td>They had been waiting for an hour.</td></tr>
+          <tr><td>Future Simple</td><td>Subject + will + base verb</td><td>I will travel to Canada.</td></tr>
+          <tr><td>Future Continuous</td><td>Subject + will be + verb-ing</td><td>She will be working at 9 PM.</td></tr>
+          <tr><td>Future Perfect</td><td>Subject + will have + past participle</td><td>By tomorrow, I will have completed it.</td></tr>
+          <tr><td>Future Perfect Continuous</td><td>Subject + will have been + verb-ing</td><td>By 5 PM, I will have been studying for 3 hours.</td></tr>
+        </table>
       </div>
     </div>
 
     <div class="learn-topic" onclick="toggleLearn('other')">
       <h3>Other Stuff</h3>
       <div id="other" class="learn-content">
-        <p>Additional resources and knowledge snippets to enhance your learning:</p>
+        <p><strong>Common Idioms & Phrases:</strong></p>
         <ul>
-          <li>Common English idioms</li>
-          <li>Writing tips</li>
-          <li>Quick reference guides</li>
+          <li>Break the ice → start a conversation</li>
+          <li>Piece of cake → very easy</li>
+        </ul>
+        <p><strong>Linking Words for IELTS:</strong></p>
+        <ul>
+          <li>Firstly, moreover, however, therefore, in conclusion</li>
+        </ul>
+        <p><strong>Common Mistakes:</strong></p>
+        <ul>
+          <li>Confusing their/there/they’re</li>
+          <li>Much vs many: "How many apples?" vs "How much water?"</li>
+        </ul>
+        <p><strong>Vocabulary Tips:</strong></p>
+        <ul>
+          <li>Big → huge, massive, enormous</li>
+          <li>Small → tiny, minute, little</li>
         </ul>
       </div>
     </div>
@@ -350,7 +387,6 @@ function createID() {
   const input = document.getElementById('first3').value.toUpperCase();
   if(input.length !== 3) { alert('Please enter exactly 3 letters.'); return; }
 
-  // Counter stored in localStorage
   let counter = localStorage.getItem('idCounter') ? parseInt(localStorage.getItem('idCounter')) : 1;
   const numericPart = String(counter).padStart(5,'0');
   const newID = `${input}${numericPart}`;
@@ -367,3 +403,4 @@ function createID() {
 
 </body>
 </html>
+``
