@@ -163,6 +163,31 @@
       font-size: 18px;
       line-height: 1.5;
     }
+
+    /* Generate ID Section */
+    #generate-id input {
+      padding:12px;
+      font-size:18px;
+      border-radius:8px;
+      border:1px solid #ccc;
+      margin-right:10px;
+    }
+    #generate-id button {
+      padding:12px 25px;
+      font-size:18px;
+      border:none;
+      border-radius:8px;
+      background:#ff9f80;
+      color:white;
+      cursor:pointer;
+    }
+    #new-id {
+      margin-top:20px;
+      font-size:22px;
+      font-weight:bold;
+      color:#2d7a69;
+    }
+
   </style>
 </head>
 <body>
@@ -175,11 +200,12 @@
   <div class="menu-item" onclick="showSection('explore')">Explore Yourself</div>
   <div class="menu-item" onclick="showSection('learn')">Learn With Us</div>
   <div class="menu-item" onclick="showSection('suggestions')">Give Suggestions</div>
+  <div class="menu-item" onclick="showSection('generate-id')">Generate Digital ID</div>
 </div>
 
 <!-- Main Content -->
 <div id="main">
-  <!-- Welcome -->
+  <!-- Home -->
   <div id="welcome" class="section show">
     <h1>Welcome to Digital World</h1>
     <p class="tagline">Changing lives and caring about planet</p>
@@ -288,6 +314,15 @@
     </form>
   </div>
 
+  <!-- Generate Digital ID -->
+  <div id="generate-id" class="section">
+    <h1>Generate Your Digital ID</h1>
+    <p class="tagline">Enter the first 3 letters of your first name:</p>
+    <input type="text" id="first3" maxlength="3" placeholder="e.g., ARU">
+    <button onclick="createID()">Generate ID</button>
+    <p id="new-id"></p>
+  </div>
+
 </div>
 
 <script>
@@ -308,6 +343,25 @@ function toggleLearn(id) {
   const content = document.getElementById(id);
   content.style.display = (content.style.display === 'block') ? 'none' : 'block';
   content.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// Generate Digital ID
+function createID() {
+  const input = document.getElementById('first3').value.toUpperCase();
+  if(input.length !== 3) { alert('Please enter exactly 3 letters.'); return; }
+
+  // Counter stored in localStorage
+  let counter = localStorage.getItem('idCounter') ? parseInt(localStorage.getItem('idCounter')) : 1;
+  const numericPart = String(counter).padStart(5,'0');
+  const newID = `${input}${numericPart}`;
+
+  document.getElementById('new-id').textContent = `Your Digital ID: ${newID} ✅ Successfully created!`;
+  localStorage.setItem('idCounter', counter + 1);
+
+  const email = prompt('Enter your email to receive your Digital ID:');
+  if(email) {
+    window.location.href = `mailto:${email}?subject=Your Digital ID&body=Hello,%0A%0AYour new Digital ID is: ${newID}%0A%0AUse it to access your digital services.%0A%0AThanks!`;
+  }
 }
 </script>
 
