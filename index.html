@@ -1,68 +1,243 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Unfolding Yourself</title>
+  <title>Digital Estonia Portal & Unfold Yourself</title>
   <style>
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
-      text-align: center;
       margin: 0;
-      padding: 80px 20px;
       color: #333;
       background: linear-gradient(-45deg, #c6f0fa, #fef6e4, #d4f7dc, #ffdde1);
       background-size: 400% 400%;
       animation: gradientBG 15s ease infinite;
-      overflow-x: hidden;
-      scroll-behavior: smooth;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
     }
-
     @keyframes gradientBG {
-      0% {background-position: 0% 50%;}
-      50% {background-position: 100% 50%;}
-      100% {background-position: 0% 50%;}
+      0% {background-position:0% 50%;}
+      50% {background-position:100% 50%;}
+      100% {background-position:0% 50%;}
     }
 
-    h1 { font-size: 60px; margin-bottom: 10px; }
-    p.tagline { font-size: 28px; color: #555; margin-bottom: 50px; }
+    /* Sidebar */
+    #sidebar {
+      width: 250px;
+      background: rgba(255,255,255,0.95);
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      padding: 30px 20px;
+      box-sizing: border-box;
+      flex-shrink: 0;
+    }
+    #sidebar h2 {
+      font-size: 24px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .menu-item {
+      font-size: 20px;
+      margin: 15px 0;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+      background-color: #ff9f80;
+      color: white;
+      text-align: center;
+    }
+    .menu-item:hover { opacity: 0.8; }
 
-    .thought {
-      display: block;
-      margin: 30px auto;
-      padding: 20px;
-      max-width: 700px;
-      border-radius: 12px;
-      background-color: rgba(255, 255, 255, 0.95);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    /* Main content */
+    #main {
+      flex-grow: 1;
+      padding: 50px;
+      overflow-y: auto;
+    }
+    #main h1 {
+      font-size: 50px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    #main p.tagline {
       font-size: 22px;
-      line-height: 1.6;
-      opacity: 1;
-      transform: translateY(0);
-      transition: opacity 0.6s ease, transform 0.6s ease;
+      text-align: center;
+      margin-bottom: 50px;
+      color: #555;
+    }
+
+    .section {
+      display: none;
+      animation: fadeIn 0.8s ease forwards;
+    }
+    .section.show { display: block; }
+
+    @keyframes fadeIn {
+      0% {opacity:0; transform: translateY(20px);}
+      100% {opacity:1; transform: translateY(0);}
+    }
+
+    /* Services */
+    .service-item {
+      background: rgba(255,255,255,0.95);
+      padding: 20px;
+      margin: 15px 0;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Explore Yourself */
+    #mood-button {
+      font-size: 22px;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      background-color: #ff9f80;
+      color: white;
+      cursor: pointer;
+      margin-bottom: 30px;
+    }
+    .thought {
+      display: none;
+      margin: 20px 0;
+      padding: 20px;
+      background-color: #ffb6c1;
+      border-radius: 12px;
+      font-size: 20px;
+      line-height: 1.5;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s, transform 0.6s;
+    }
+    .thought.show { display: block; opacity: 1; transform: translateY(0); }
+
+    /* Suggestions form */
+    form {
+      margin: 20px auto;
+      max-width: 700px;
+      background: rgba(255,255,255,0.95);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
       text-align: left;
     }
-
-    .unsolved { background-color: #ffb6c1; color: #333; }
+    form input, form textarea {
+      width: 100%;
+      padding: 12px 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 18px;
+      resize: none;
+    }
+    form button {
+      padding: 15px 25px;
+      background: #6fcf97;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 20px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    form button:hover {
+      opacity: 0.85;
+      transform: scale(1.02);
+    }
   </style>
 </head>
 <body>
 
-<h1>Unfolding Yourself</h1>
-<p class="tagline">Exploring the inner world 🌿</p>
-
-<div class="thought unsolved">
-Your energy is powerful. Protect it from draining on unworthy people or environments who don’t value you and your efforts, even when trying again and again.<br><br>
-
-Life teaches through:
-<ul>
-<li>Consequences</li>
-<li>Repeated patterns</li>
-<li>Loss</li>
-<li>Time</li>
-</ul>
-
-So yes, in a grounded way:<br>
-👉 Someone will learn when they are ready or when life forces it, not when you explain it perfectly to them.
+<!-- Sidebar -->
+<div id="sidebar">
+  <h2>Digital Portal</h2>
+  <div class="menu-item" onclick="showSection('welcome')">Home</div>
+  <div class="menu-item" onclick="showSection('services')">Services</div>
+  <div class="menu-item" onclick="showSection('explore')">Explore Yourself</div>
+  <div class="menu-item" onclick="showSection('suggestions')">Give Suggestions</div>
 </div>
+
+<!-- Main Content -->
+<div id="main">
+  <!-- Welcome -->
+  <div id="welcome" class="section show">
+    <h1>Welcome to the Digital Estonia Portal</h1>
+    <p class="tagline">Experience secure, efficient, and innovative online services inspired by Estonia.</p>
+  </div>
+
+  <!-- Services -->
+  <div id="services" class="section">
+    <h1>Services</h1>
+    <div class="service-item">
+      <h3>Digital ID & Authentication</h3>
+      <p>Secure online identity, authentication, and digital signing of documents like Estonia's e-ID.</p>
+    </div>
+    <div class="service-item">
+      <h3>Healthcare & e-Health</h3>
+      <p>Access medical records, book appointments, and manage prescriptions entirely online.</p>
+    </div>
+    <div class="service-item">
+      <h3>Payments & Banking</h3>
+      <p>Pay taxes, bills, and perform secure financial transactions seamlessly.</p>
+    </div>
+    <div class="service-item">
+      <h3>Voting & Governance</h3>
+      <p>Participate in elections securely from anywhere using online e-voting systems.</p>
+    </div>
+  </div>
+
+  <!-- Explore Yourself -->
+  <div id="explore" class="section">
+    <h1>Unfolding Yourself</h1>
+    <p class="tagline">Exploring the inner world 🌿</p>
+    <button id="mood-button" onclick="showUnsolved()">What's your mood?</button>
+    <div class="thought" id="unsolved-text">
+      Your energy is powerful. Protect it from draining on unworthy people or environments who don’t value you and your efforts, even when trying again and again.<br><br>
+      Life teaches through:
+      <ul>
+        <li>Consequences</li>
+        <li>Repeated patterns</li>
+        <li>Loss</li>
+        <li>Time</li>
+      </ul>
+      So yes, in a grounded way:<br>
+      👉 Someone will learn when they are ready or when life forces it, not when you explain it perfectly to them.
+    </div>
+  </div>
+
+  <!-- Give Suggestions -->
+  <div id="suggestions" class="section">
+    <h1>Give Suggestions</h1>
+    <p class="tagline">Your feedback matters. Share your thoughts or suggestions below:</p>
+    <form action="https://formspree.io/f/your-form-id" method="POST">
+      <label for="name">Your Name</label>
+      <input type="text" name="name" id="name" placeholder="Enter your name" required>
+
+      <label for="email">Your Email</label>
+      <input type="email" name="email" id="email" placeholder="Enter your email" required>
+
+      <label for="message">Message</label>
+      <textarea name="message" id="message" rows="6" placeholder="Write your suggestion here" required></textarea>
+
+      <button type="submit">Send Suggestion</button>
+    </form>
+  </div>
+
+</div>
+
+<script>
+function showSection(sectionId) {
+  const sections = document.getElementsByClassName('section');
+  for (let s of sections) s.classList.remove('show');
+  document.getElementById(sectionId).classList.add('show');
+  document.getElementById(sectionId).scrollIntoView({behavior:'smooth'});
+}
+
+function showUnsolved() {
+  const unsolved = document.getElementById('unsolved-text');
+  unsolved.classList.add('show');
+  unsolved.scrollIntoView({behavior:'smooth', block:'start'});
+}
+</script>
 
 </body>
 </html>
