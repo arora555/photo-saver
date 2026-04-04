@@ -25,80 +25,23 @@
     h1 { font-size: 60px; margin-bottom: 10px; }
     p.tagline { font-size: 28px; color: #555; margin-bottom: 50px; }
 
-    #mood-button {
-      font-size: 24px;
-      padding: 15px 30px;
-      border: none;
-      border-radius: 8px;
-      background-color: #ff9f80;
-      color: white;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    #mood-button:hover { opacity: 0.8; }
-
-    #mood-options {
-      margin-top: 30px;
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.5s ease-out, opacity 0.5s ease-out;
-      opacity: 0;
-    }
-    #mood-options.show { max-height: 1000px; opacity: 1; }
-
-    .mood-option {
-      font-size: 20px;
-      padding: 12px 25px;
-      margin: 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      display: inline-block;
-      transition: transform 0.2s, opacity 0.3s;
-      color: #fff;
-    }
-    .happy { background-color: #ffcc33; color: #333; }
-    .calm { background-color: #80d8ff; }
-    .deep { background-color: #9b59b6; }
-    .motivation { background-color: #ff6f61; }
-    .unsolved { background-color: #ffb6c1; color: #333; }
-    .mood-option:hover { transform: scale(1.05); opacity: 0.9; }
-
     .thought {
-      display: none;
+      display: block;
       margin: 30px auto;
       padding: 20px;
-      max-width: 600px;
+      max-width: 700px;
       border-radius: 12px;
-      background-color: rgba(255,255,255,0.9);
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      background-color: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
       font-size: 22px;
-      line-height: 1.5;
-      opacity: 0;
-      transform: translateY(20px);
+      line-height: 1.6;
+      opacity: 1;
+      transform: translateY(0);
       transition: opacity 0.6s ease, transform 0.6s ease;
+      text-align: left;
     }
-    .thought.show { display: block; opacity: 1; transform: translateY(0); }
 
-    #random-button {
-      margin-top: 20px;
-      font-size: 20px;
-      padding: 10px 25px;
-      border: none;
-      border-radius: 8px;
-      background-color: #6fcf97;
-      color: white;
-      cursor: pointer;
-      display: none;
-      transition: 0.3s;
-    }
-    #random-button:hover { opacity: 0.85; }
-
-    .prompt {
-      font-size: 18px;
-      color: #555;
-      margin-top: 10px;
-      font-style: italic;
-    }
+    .unsolved { background-color: #ffb6c1; color: #333; }
   </style>
 </head>
 <body>
@@ -106,87 +49,20 @@
 <h1>Unfolding Yourself</h1>
 <p class="tagline">Exploring the inner world 🌿</p>
 
-<button id="mood-button" onclick="toggleMoodOptions()">What's your mood?</button>
-
-<div id="mood-options">
-  <div class="mood-option happy" onclick="showThoughts('happy')">❤️ Happy</div>
-  <div class="mood-option calm" onclick="showThoughts('calm')">🌊 Calm</div>
-  <div class="mood-option deep" onclick="showThoughts('deep')">💭 Deep</div>
-  <div class="mood-option motivation" onclick="showThoughts('motivation')">🔥 Motivation</div>
-  <div class="mood-option unsolved" onclick="showThoughts('unsolved')">❓ Unsolved</div>
-</div>
-
-<!-- EXAMPLE THOUGHTS FOR EACH MOOD -->
-<!-- HAPPY -->
-<div class="thought happy">Happiness blooms when you appreciate small joys.<div class="prompt">Notice one small joy today.</div></div>
-<div class="thought happy">A smile can brighten your day.<div class="prompt">Think of someone to smile at.</div></div>
-
-<!-- CALM -->
-<div class="thought calm">Breathe deeply and let the tension melt.<div class="prompt">Close your eyes and breathe slowly.</div></div>
-<div class="thought calm">The present moment is all there is; rest here.<div class="prompt">Feel your body settling now.</div></div>
-
-<!-- DEEP -->
-<div class="thought deep">Stillness holds answers you cannot hear in noise.<div class="prompt">Sit quietly and reflect.</div></div>
-<div class="thought deep">Every thought is a cloud; watch them drift.<div class="prompt">Observe without reacting.</div></div>
-
-<!-- MOTIVATION -->
-<div class="thought motivation">Small consistent actions create big change.<div class="prompt">Take one small step today.</div></div>
-<div class="thought motivation">Discipline is freedom in disguise.<div class="prompt">Act with focus in one area.</div></div>
-
-<!-- UNSOLVED CATEGORY -->
 <div class="thought unsolved">
 Your energy is powerful. Protect it from draining on unworthy people or environments who don’t value you and your efforts, even when trying again and again.<br><br>
+
 Life teaches through:
-<ul style="text-align:left;">
+<ul>
 <li>Consequences</li>
 <li>Repeated patterns</li>
 <li>Loss</li>
 <li>Time</li>
 </ul>
+
 So yes, in a grounded way:<br>
 👉 Someone will learn when they are ready or when life forces it, not when you explain it perfectly to them.
 </div>
-
-<button id="random-button" onclick="showRandomThought()">🎲 Random Thought</button>
-
-<script>
-function toggleMoodOptions() {
-  document.getElementById('mood-options').classList.toggle('show');
-}
-
-function showThoughts(mood) {
-  const thoughts = document.getElementsByClassName('thought');
-  for (let t of thoughts) t.classList.remove('show');
-
-  const selected = document.getElementsByClassName(mood);
-  for (let s of selected) {
-    s.classList.add('show');
-    s.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  document.getElementById('random-button').style.display = "inline-block";
-}
-
-function showRandomThought() {
-  const visible = [];
-  for (let t of document.getElementsByClassName('thought')) {
-    if (t.classList.contains('show')) visible.push(t);
-  }
-  if (!visible.length) return;
-
-  for (let v of visible) v.classList.remove('show');
-  const rand = visible[Math.floor(Math.random() * visible.length)];
-  rand.classList.add('show');
-  rand.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-// Auto-load random thought on page load
-window.onload = function() {
-  const allThoughts = document.getElementsByClassName('thought');
-  const rand = allThoughts[Math.floor(Math.random() * allThoughts.length)];
-  rand.classList.add('show');
-};
-</script>
 
 </body>
 </html>
