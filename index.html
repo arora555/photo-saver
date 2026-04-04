@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Unfolding Thoughts</title>
+  <title>Unfolding Yourself</title>
   <style>
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -60,6 +60,7 @@
     .calm { background-color: #80d8ff; }
     .deep { background-color: #9b59b6; }
     .motivation { background-color: #ff6f61; }
+    .unsolved { background-color: #ffb6c1; color: #333; }
     .mood-option:hover { transform: scale(1.05); opacity: 0.9; }
 
     .thought {
@@ -102,7 +103,7 @@
 </head>
 <body>
 
-<h1>Unfolding Thoughts</h1>
+<h1>Unfolding Yourself</h1>
 <p class="tagline">Exploring the inner world 🌿</p>
 
 <button id="mood-button" onclick="toggleMoodOptions()">What's your mood?</button>
@@ -112,29 +113,39 @@
   <div class="mood-option calm" onclick="showThoughts('calm')">🌊 Calm</div>
   <div class="mood-option deep" onclick="showThoughts('deep')">💭 Deep</div>
   <div class="mood-option motivation" onclick="showThoughts('motivation')">🔥 Motivation</div>
+  <div class="mood-option unsolved" onclick="showThoughts('unsolved')">❓ Unsolved</div>
 </div>
 
-<!-- Pre-structured template for multiple thoughts per mood -->
-<!-- Just copy-paste your thoughts into the appropriate section -->
-<!-- HAPPY THOUGHTS -->
-<div class="thought happy">Happiness blooms when you appreciate small joys. <div class="prompt">Notice a small joy around you.</div></div>
-<div class="thought happy">Share a smile today; it returns tenfold. <div class="prompt">Think of someone you can brighten.</div></div>
-<!-- Add up to 50+ happy thoughts here -->
+<!-- EXAMPLE THOUGHTS FOR EACH MOOD -->
+<!-- HAPPY -->
+<div class="thought happy">Happiness blooms when you appreciate small joys.<div class="prompt">Notice one small joy today.</div></div>
+<div class="thought happy">A smile can brighten your day.<div class="prompt">Think of someone to smile at.</div></div>
 
-<!-- CALM THOUGHTS -->
-<div class="thought calm">Breathe deeply and let the tension melt. <div class="prompt">Close your eyes and breathe slowly.</div></div>
-<div class="thought calm">The present moment is all there is; rest here. <div class="prompt">Feel your body settling now.</div></div>
-<!-- Add up to 50+ calm thoughts here -->
+<!-- CALM -->
+<div class="thought calm">Breathe deeply and let the tension melt.<div class="prompt">Close your eyes and breathe slowly.</div></div>
+<div class="thought calm">The present moment is all there is; rest here.<div class="prompt">Feel your body settling now.</div></div>
 
-<!-- DEEP THOUGHTS -->
-<div class="thought deep">Stillness holds answers you cannot hear in noise. <div class="prompt">Sit quietly and reflect.</div></div>
-<div class="thought deep">Every thought is a cloud; watch them drift. <div class="prompt">Observe without reacting.</div></div>
-<!-- Add up to 50+ deep thoughts here -->
+<!-- DEEP -->
+<div class="thought deep">Stillness holds answers you cannot hear in noise.<div class="prompt">Sit quietly and reflect.</div></div>
+<div class="thought deep">Every thought is a cloud; watch them drift.<div class="prompt">Observe without reacting.</div></div>
 
-<!-- MOTIVATION THOUGHTS -->
-<div class="thought motivation">Small consistent actions create big change. <div class="prompt">Take one small step today.</div></div>
-<div class="thought motivation">Discipline is freedom in disguise. <div class="prompt">Act with focus in one area.</div></div>
-<!-- Add up to 50+ motivational thoughts here -->
+<!-- MOTIVATION -->
+<div class="thought motivation">Small consistent actions create big change.<div class="prompt">Take one small step today.</div></div>
+<div class="thought motivation">Discipline is freedom in disguise.<div class="prompt">Act with focus in one area.</div></div>
+
+<!-- UNSOLVED CATEGORY -->
+<div class="thought unsolved">
+Your energy is powerful. Protect it from draining on unworthy people or environments who don’t value you and your efforts, even when trying again and again.<br><br>
+Life teaches through:
+<ul style="text-align:left;">
+<li>Consequences</li>
+<li>Repeated patterns</li>
+<li>Loss</li>
+<li>Time</li>
+</ul>
+So yes, in a grounded way:<br>
+👉 Someone will learn when they are ready or when life forces it, not when you explain it perfectly to them.
+</div>
 
 <button id="random-button" onclick="showRandomThought()">🎲 Random Thought</button>
 
@@ -169,7 +180,7 @@ function showRandomThought() {
   rand.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// Auto-load random thought on page open
+// Auto-load random thought on page load
 window.onload = function() {
   const allThoughts = document.getElementsByClassName('thought');
   const rand = allThoughts[Math.floor(Math.random() * allThoughts.length)];
